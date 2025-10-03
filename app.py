@@ -2,21 +2,16 @@ import os
 import re
 import json
 from typing import Dict, Any, List, Tuple
-
 from flask import Flask, request, jsonify, render_template
 from werkzeug.datastructures import FileStorage
 from dotenv import load_dotenv
+from openai import OpenAI 
+from config import OPENAI_MODEL
 
 import nltk
 from nltk.corpus import stopwords
 
 from PyPDF2 import PdfReader
-
-# OpenAI SDK
-try:
-    from openai import OpenAI
-except Exception:
-    OpenAI = None
 
 # Hugging Face (gratuito)
 try:
@@ -27,6 +22,7 @@ except Exception:
 
 
 load_dotenv()
+print("🔑 API Key existe?", bool(os.getenv("OPENAI_API_KEY")))
 
 # Importar configuração
 try:
@@ -308,7 +304,7 @@ def classify_and_respond_with_openai(email_original: str, email_preprocessed: st
         print("⚠️ OpenAI não configurado, usando Hugging Face como fallback")
         return classify_with_huggingface(email_original, email_preprocessed)
 
-    client = OpenAI(api_key=api_key)
+    client = OpenAI()
 
     system_prompt = """Você é um assistente especializado em análise e resposta de emails profissionais.
 
@@ -354,7 +350,7 @@ Responda APENAS com o JSON válido."""
     try:
         print("🤖 Gerando resposta contextual com OpenAI...")
         completion = client.chat.completions.create(
-            model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
+            model=OPENAI_MODEL,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
